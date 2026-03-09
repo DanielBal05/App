@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, redirect, session, Response
 import traceback
 import requests
+import threading
 
 # ✅ Recordatorios (legacy)
 import os, json, uuid
@@ -18,6 +19,15 @@ if not os.path.isdir(TEMPLATES_DIR):
     TEMPLATES_DIR = BASE_DIR
 
 app = Flask(__name__, template_folder=TEMPLATES_DIR)
+
+def wake_n8n():
+    try:
+        requests.get(
+            "https://n8n-lab-automation.onrender.com",
+            timeout=8
+        )
+    except Exception as e:
+        print("No se pudo despertar n8n:", e)
 
 @app.route("/ping")
 def ping():
@@ -318,6 +328,8 @@ def notifications_test():
 # =========================
 @app.route("/login")
 def login_page():
+    threading.Thread(target=wake_n8n, daemon=True).start()
+
     next_url = _safe_next_url(request.args.get("next"), default="/spectra")
 
     role = session.get("role")
@@ -388,6 +400,8 @@ def whoami():
 # =========================
 @app.route("/")
 def home():
+    threading.Thread(target=wake_n8n, daemon=True).start()
+
     role = session.get("role")
 
     if role == "admin":
@@ -954,3 +968,4 @@ def spectra_redirect():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
