@@ -387,9 +387,16 @@ def whoami():
 # ✅ Páginas (protegidas)
 # =========================
 @app.route("/")
-@require_role("admin")
-def index():
-    return render_template("index.html")
+def home():
+    role = session.get("role")
+
+    if role == "admin":
+        return redirect("/spectra")
+
+    if role == "student":
+        return redirect("/registro-estudiante")
+
+    return redirect("/login")
 
 @app.route("/reminders")
 @require_role("admin")
@@ -945,4 +952,5 @@ def spectra_redirect():
     return redirect(f"{FASTAPI_BASE}/app-spectra", code=302)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
