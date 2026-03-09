@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+requests
+tavily-python
+faster-whisper
