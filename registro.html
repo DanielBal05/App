@@ -61,6 +61,11 @@
       padding:10px 14px;
       border-radius:14px;
       background:#071026;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:44px;
+      white-space:nowrap;
     }
 
     .pillTop{
@@ -71,6 +76,8 @@
       color:var(--muted);
       font-size:12px;
       display:none;
+      align-items:center;
+      min-height:40px;
     }
 
     .grid{
@@ -86,6 +93,7 @@
       border-radius:18px;
       padding:16px;
       box-shadow:0 10px 30px rgba(0,0,0,.35);
+      min-width:0;
     }
 
     .card h3{
@@ -124,6 +132,7 @@
       font-size:13px;
       white-space:nowrap;
       transition:transform .18s ease, opacity .18s ease, border-color .18s ease;
+      min-height:44px;
     }
 
     .downloadBtn:hover{
@@ -147,6 +156,8 @@
       background:#050b18;
       color:var(--text);
       outline:none;
+      min-height:48px;
+      font-size:16px;
     }
 
     select:focus, input:focus{
@@ -163,6 +174,8 @@
       color:var(--text);
       font-weight:800;
       cursor:pointer;
+      min-height:50px;
+      font-size:16px;
     }
 
     .btn:disabled{
@@ -193,6 +206,9 @@
       border-radius:999px;
       color:var(--muted);
       font-size:12px;
+      display:inline-flex;
+      align-items:center;
+      min-height:40px;
     }
 
     .filters{
@@ -208,6 +224,7 @@
       padding:10px 10px;
       border-radius:12px;
       background:#050b18;
+      min-height:46px;
     }
 
     .listaWrap{
@@ -215,6 +232,7 @@
       max-height:560px;
       overflow-y:auto;
       padding-right:4px;
+      min-width:0;
     }
 
     .item{
@@ -242,6 +260,8 @@
       padding:6px 10px;
       border-radius:999px;
       font-size:12px;
+      max-width:100%;
+      overflow-wrap:anywhere;
     }
 
     .name{
@@ -254,6 +274,7 @@
       font-size:12px;
       margin-top:6px;
       line-height:1.5;
+      overflow-wrap:anywhere;
     }
 
     .actions{
@@ -272,6 +293,8 @@
       cursor:pointer;
       font-weight:800;
       min-width:150px;
+      min-height:46px;
+      font-size:15px;
     }
 
     .btnOk{
@@ -331,10 +354,197 @@
       z-index:9999;
     }
 
-    @media (max-width: 980px){
-      .grid{grid-template-columns:1fr}
-      .item{grid-template-columns:1fr}
-      .actions{flex-direction:row;flex-wrap:wrap}
+    /* ===== MODO EMBED (dentro de Spectra) ===== */
+    body.embed-mode{
+      padding:12px;
+      background:transparent;
+    }
+
+    body.embed-mode .top{
+      margin-bottom:12px;
+      align-items:flex-start;
+    }
+
+    body.embed-mode .topRight .hideOnEmbed{
+      display:none !important;
+    }
+
+    body.embed-mode .linkBtn{
+      padding:10px 12px;
+    }
+
+    body.embed-mode .grid{
+      gap:14px;
+    }
+
+    /* ===== TABLET / MOBILE ===== */
+    @media (max-width: 1180px){
+      .grid{
+        grid-template-columns:1fr;
+      }
+
+      .item{
+        grid-template-columns:1fr;
+      }
+
+      .actions{
+        flex-direction:row;
+        flex-wrap:wrap;
+      }
+    }
+
+    @media (max-width: 768px){
+      body{
+        padding:12px;
+      }
+
+      .top{
+        flex-direction:column;
+        align-items:stretch;
+        gap:12px;
+        margin-bottom:14px;
+      }
+
+      .title{
+        font-size:15px;
+        letter-spacing:.16em;
+      }
+
+      .topRight{
+        width:100%;
+        justify-content:flex-start;
+        gap:8px;
+      }
+
+      .pillTop{
+        width:100%;
+        border-radius:14px;
+      }
+
+      .linkBtn{
+        flex:1 1 calc(50% - 8px);
+        min-width:150px;
+        text-align:center;
+      }
+
+      .grid{
+        grid-template-columns:1fr;
+        gap:14px;
+      }
+
+      .card{
+        padding:14px;
+        border-radius:16px;
+      }
+
+      .cardHead{
+        flex-direction:column;
+        align-items:stretch;
+      }
+
+      .downloadBtn{
+        width:100%;
+      }
+
+      .listHead{
+        flex-direction:column;
+        align-items:stretch;
+      }
+
+      .filters{
+        width:100%;
+        flex-direction:column;
+        align-items:stretch;
+      }
+
+      .filters select,
+      .filters button,
+      .filters .pill{
+        width:100%;
+      }
+
+      .listaWrap{
+        max-height:none;
+        overflow:visible;
+        padding-right:0;
+      }
+
+      .item{
+        grid-template-columns:1fr;
+        gap:14px;
+        padding:14px;
+      }
+
+      .row1{
+        gap:8px;
+      }
+
+      .name{
+        width:100%;
+        font-size:17px;
+      }
+
+      .chip{
+        font-size:12px;
+      }
+
+      .sub{
+        font-size:13px;
+      }
+
+      .actions{
+        flex-direction:column;
+        width:100%;
+      }
+
+      .btnSmall{
+        width:100%;
+        min-width:0;
+      }
+
+      .toast{
+        left:12px;
+        right:12px;
+        bottom:12px;
+        max-width:none;
+      }
+    }
+
+    @media (max-width: 520px){
+      body.embed-mode{
+        padding:8px;
+      }
+
+      .title{
+        font-size:14px;
+        letter-spacing:.14em;
+      }
+
+      .topRight{
+        flex-direction:column;
+        align-items:stretch;
+      }
+
+      .linkBtn{
+        width:100%;
+        min-width:0;
+      }
+
+      .pillTop{
+        width:100%;
+      }
+
+      .card{
+        padding:12px;
+      }
+
+      .card h3{
+        font-size:13px;
+      }
+
+      .hint{
+        font-size:11px;
+      }
     }
   </style>
 </head>
@@ -344,8 +554,8 @@
     <div class="topRight">
       <span class="pillTop" id="whoPill">Estudiante: — | Banner: —</span>
       <a class="linkBtn" href="/">← Volver a Spectra</a>
-      <a class="linkBtn" href="/reminders">⏰ Recordatorios</a>
-      <a class="linkBtn" href="/login">🔐 Cambiar usuario</a>
+      <a class="linkBtn hideOnEmbed" href="/reminders">⏰ Recordatorios</a>
+      <a class="linkBtn hideOnEmbed" href="/login">🔐 Cambiar usuario</a>
     </div>
   </div>
 
@@ -413,6 +623,16 @@
   const $ = (id) => document.getElementById(id);
 
   let SESSION = { role: null, student_name: "", banner_id: "" };
+
+  function applyEmbedMode(){
+    const params = new URLSearchParams(window.location.search);
+    const forcedEmbed = params.get("embed") === "1";
+    const inIframe = window.self !== window.top;
+
+    if(forcedEmbed || inIframe){
+      document.body.classList.add("embed-mode");
+    }
+  }
 
   function toast(msg){
     const t = $("toast");
@@ -755,6 +975,7 @@
   });
 
   (async () => {
+    applyEmbedMode();
     await preloadStudent();
     await load();
   })();
