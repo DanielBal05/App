@@ -119,6 +119,7 @@ N8N_BASE = os.environ.get("N8N_BASE", "https://n8n-lab-automation.onrender.com")
 # - Si en n8n tu webhook real es /prestamo, deja prestamo
 # - Si fuera /prestar, cambia aquí
 N8N_PRESTAR = os.environ.get("N8N_PRESTAR", f"{N8N_BASE}/webhook/lab/prestamo")
+N8N_ENTREGAR = os.environ.get("N8N_ENTREGAR", f"{N8N_BASE}/webhook/lab-entregar")
 N8N_DEVOLVER = os.environ.get("N8N_DEVOLVER", f"{N8N_BASE}/webhook/lab/devolver")
 N8N_LISTAR = os.environ.get("N8N_LISTAR", f"{N8N_BASE}/webhook/lab/listar")
 
@@ -182,6 +183,16 @@ def _get_n8n_json(url, timeout=30):
     r = requests.get(url, timeout=timeout)
     data = _response_json_or_text(r)
     return r, data
+
+def _pick_msg(data, default_msg):
+    if isinstance(data, dict):
+        return (
+            data.get("msg")
+            or data.get("message")
+            or data.get("detail")
+            or default_msg
+        )
+    return default_msg
 
 # =========================
 # ✅ (LEGACY) Recordatorios Flask (DB que lee tu pestaña /reminders)
@@ -516,7 +527,7 @@ def api_lab_prestar():
 
         semestre = (data.get("semestre") or "").strip()
         equipo = (data.get("equipo") or "").strip()
-        extras = (data.get("extra_general") or "").strip()
+        extras = (data.get("extra_general") or data.get("Extras") or "").strip()
 
         payload = {
             "nombre": nombre,
@@ -548,6 +559,42 @@ def api_lab_prestar():
     except Exception as e:
         return jsonify({"ok": False, "error": f"api_lab_prestar error: {str(e)}"}), 500
 
+@app.route("/api/lab/entregar", methods=["POST"])
+@require_role("admin")
+def api_lab_entregar():
+    try:
+        data = request.get_json(silent=True) or {}
+
+        item_id = (data.get("id") or data.get("ID") or data.get("codigo") or "").strip()
+
+        if not item_id:
+            return jsonify({"ok": False, "error": "Falta id para entregar"}), 400
+
+        payload = {"id": item_id}
+
+        r, resp_data = _post_n8n_json(N8N_ENTREGAR, payload=payload, timeout=30)
+
+        if not r.ok:
+            return jsonify({
+                "ok": False,
+                "error": resp_data.get("error") or resp_data.get("message") or "Error en n8n /entregar",
+                "raw": resp_data
+            }), r.status_code
+
+        msg = _pick_msg(resp_data, "Equipo entregado correctamente ✅")
+
+        return jsonify({
+            "ok": True,
+            "msg": msg,
+            "id": item_id,
+            "data": resp_data
+        }), 200
+
+    except requests.exceptions.Timeout:
+        return jsonify({"ok": False, "error": "Timeout llamando a n8n /entregar"}), 504
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"api_lab_entregar error: {str(e)}"}), 500
+
 @app.route("/api/lab/devolver", methods=["POST"])
 @require_role("admin")
 def api_lab_devolver():
@@ -575,11 +622,7 @@ def api_lab_devolver():
                 "raw": resp_data
             }), r.status_code
 
-        msg = (
-            resp_data.get("msg")
-            or resp_data.get("message")
-            or "Devolución registrada ✅"
-        )
+        msg = _pick_msg(resp_data, "Devolución registrada ✅")
 
         return jsonify({
             "ok": True,
@@ -968,4 +1011,3 @@ def spectra_redirect():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
