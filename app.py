@@ -8,7 +8,7 @@ import os, json, uuid
 from datetime import datetime, timedelta
 import re
 from functools import wraps
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 
 # ✅ IMPORTANTE: apuntar templates a la carpeta actual (porque tus .html están en la raíz)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -510,14 +510,18 @@ def api_lab_descargar():
             "ok": False,
             "error": f"api_lab_descargar error: {str(e)}"
         }), 500
-
 @app.route("/api/lab/prestar", methods=["POST"])
 @require_role("admin", "student")
 def api_lab_prestar():
     try:
         data = request.get_json(silent=True) or {}
 
+        print("\n========== DEBUG PRESTAR ==========")
+        print("JSON recibido:", data)
+
         role = session.get("role")
+        print("role:", role)
+
         if role == "student":
             nombre = (session.get("student_name") or "").strip()
             banner_id = (session.get("banner_id") or "").strip()
@@ -526,8 +530,14 @@ def api_lab_prestar():
             banner_id = (data.get("banner_id") or data.get("bannerId") or data.get("BannerID") or "").strip()
 
         semestre = (data.get("semestre") or "").strip()
-        equipo = (data.get("equipo") or "").strip()
+        equipo = unquote((data.get("equipo") or "").strip())
         extras = (data.get("extra_general") or data.get("Extras") or "").strip()
+
+        print("nombre:", nombre)
+        print("banner_id:", banner_id)
+        print("semestre:", semestre)
+        print("equipo:", equipo)
+        print("extras:", extras)
 
         payload = {
             "nombre": nombre,
@@ -537,6 +547,10 @@ def api_lab_prestar():
             "Extras": extras
         }
 
+        print("payload enviado a n8n:", payload)
+        print("URL N8N:", N8N_PRESTAR)
+        print("====================================\n")
+
         if not nombre or not semestre:
             return jsonify({"ok": False, "error": "Faltan campos (nombre/semestre)"}), 400
 
@@ -544,6 +558,9 @@ def api_lab_prestar():
             return jsonify({"ok": False, "error": "Debes enviar equipo o extras"}), 400
 
         r, resp_data = _post_n8n_json(N8N_PRESTAR, payload=payload, timeout=30)
+
+        print("Respuesta status n8n:", r.status_code)
+        print("Respuesta n8n:", resp_data)
 
         if not r.ok:
             return jsonify({
@@ -555,8 +572,11 @@ def api_lab_prestar():
         return jsonify(resp_data), r.status_code
 
     except requests.exceptions.Timeout:
+        print("ERROR: Timeout llamando a n8n")
         return jsonify({"ok": False, "error": "Timeout llamando a n8n /prestamo"}), 504
+
     except Exception as e:
+        print("ERROR GENERAL:", str(e))
         return jsonify({"ok": False, "error": f"api_lab_prestar error: {str(e)}"}), 500
 
 @app.route("/api/lab/entregar", methods=["POST"])
