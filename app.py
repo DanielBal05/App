@@ -175,7 +175,17 @@ def _normalize_lab_ok_response(data):
 
 def _post_n8n_json(url, payload=None, timeout=30):
     payload = payload or {}
+
+    print("\n========== DEBUG _post_n8n_json ==========")
+    print("POST URL:", url)
+    print("PAYLOAD:", payload)
+
     r = requests.post(url, json=payload, timeout=timeout)
+
+    print("STATUS:", r.status_code)
+    print("TEXT:", (r.text or "")[:1000])
+    print("==========================================\n")
+
     data = _response_json_or_text(r)
     return r, data
 
@@ -585,14 +595,26 @@ def api_lab_entregar():
     try:
         data = request.get_json(silent=True) or {}
 
+        print("\n========== DEBUG ENTREGAR ==========")
+        print("JSON recibido:", data)
+
         item_id = (data.get("id") or data.get("ID") or data.get("codigo") or "").strip()
 
+        print("item_id detectado:", item_id)
+        print("URL N8N_ENTREGAR:", N8N_ENTREGAR)
+
         if not item_id:
+            print("ERROR: falta id para entregar")
             return jsonify({"ok": False, "error": "Falta id para entregar"}), 400
 
         payload = {"id": item_id}
+        print("payload enviado a n8n:", payload)
 
         r, resp_data = _post_n8n_json(N8N_ENTREGAR, payload=payload, timeout=30)
+
+        print("status n8n:", r.status_code)
+        print("respuesta n8n:", resp_data)
+        print("====================================\n")
 
         if not r.ok:
             return jsonify({
@@ -611,8 +633,10 @@ def api_lab_entregar():
         }), 200
 
     except requests.exceptions.Timeout:
+        print("ERROR: Timeout llamando a n8n /entregar")
         return jsonify({"ok": False, "error": "Timeout llamando a n8n /entregar"}), 504
     except Exception as e:
+        print("ERROR GENERAL /api/lab/entregar:", str(e))
         return jsonify({"ok": False, "error": f"api_lab_entregar error: {str(e)}"}), 500
 
 @app.route("/api/lab/devolver", methods=["POST"])
