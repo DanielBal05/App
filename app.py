@@ -9,9 +9,13 @@ from datetime import datetime, timedelta
 import re
 from functools import wraps
 from urllib.parse import urlparse, unquote
+from auth_students import find_student
+from flask import request, jsonify, session
+
 
 # ✅ IMPORTANTE: apuntar templates a la carpeta actual (porque tus .html están en la raíz)
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__)) 
+
 
 # Si algún día sí creas carpeta templates/, Flask la usa; si no, usa la raíz (BASE_DIR)
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
@@ -390,17 +394,39 @@ def auth_admin():
 @app.route("/auth/student", methods=["POST"])
 def auth_student():
     data = request.get_json(silent=True) or {}
-    name = (data.get("name") or "").strip()
-    banner_id = (data.get("banner_id") or "").strip()
+
+    nombre = (data.get("nombre") or "").strip()
+    banner = (data.get("banner") or "").strip().upper()
     next_url = _safe_next_url(data.get("next"), default="/registro-estudiante")
 
-    if not name or not banner_id:
-        return jsonify({"ok": False, "error": "Faltan datos (Nombre/ID Banner) ❌"}), 400
+    if not nombre or not banner:
+        return jsonify({
+            "ok": False,
+            "error": "Faltan datos (Nombre/ID Banner) ❌"
+        }), 400
+
+    student = find_student(banner)
+
+    if not student:
+        return jsonify({
+            "ok": False,
+            "error": "Este estudiante no está registrado ❌"
+        }), 403
+
+    if (student.get("nombre") or "").strip().lower() != nombre.lower():
+        return jsonify({
+            "ok": False,
+            "error": "El nombre no coincide con el estudiante registrado ❌"
+        }), 403
 
     session["role"] = "student"
-    session["student_name"] = name
-    session["banner_id"] = banner_id
-    return jsonify({"ok": True, "redirect": next_url or "/registro-estudiante"}), 200
+    session["student_name"] = student["nombre"]
+    session["banner_id"] = student["banner"]
+
+    return jsonify({
+        "ok": True,
+        "redirect": next_url or "/registro-estudiante"
+    }), 200
 
 @app.route("/auth/logout", methods=["POST"])
 def auth_logout():
@@ -409,9 +435,17 @@ def auth_logout():
 
 @app.route("/whoami", methods=["GET"])
 def whoami():
+    role = session.get("role")
+
+    if not role:
+        return jsonify({
+            "ok": False,
+            "error": "No autenticado"
+        }), 401
+
     return jsonify({
         "ok": True,
-        "role": session.get("role"),
+        "role": role,
         "student_name": session.get("student_name"),
         "banner_id": session.get("banner_id"),
     }), 200
